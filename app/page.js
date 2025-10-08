@@ -16,7 +16,7 @@ export default function Home() {
     // Initialize Hightouch SDK
     // TODO: Replace 'YOUR_WRITE_KEY' with your actual Hightouch write key
     const HT = HtEventsBrowser.load(
-      { writeKey: 'YOUR_WRITE_KEY' },
+      { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
       { apiHost: 'https://us-east-1.hightouch-events.com' }
     )
     setHtEvents(HT)
