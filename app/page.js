@@ -1,6 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { HtEventsBrowser } from '@ht-sdks/events-sdk-js-browser'
+
+// Initialize Hightouch SDK outside of component
+let htevents = null;
+
+if (typeof window !== 'undefined') {
+  htevents = HtEventsBrowser.load(
+    { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
+    { apiHost: 'https://us-east-1.hightouch-events.com' }
+  );
+}
 
 export default function Home() {
   const [gameData, setGameData] = useState({
@@ -9,28 +20,16 @@ export default function Home() {
     loser: ''
   })
   const [lastGame, setLastGame] = useState(null)
-  const [htEvents, setHtEvents] = useState(null)
+  const [sdkReady, setSdkReady] = useState(false)
 
   useEffect(() => {
-    // Initialize Hightouch SDK only on client-side
-    const initializeHightouch = async () => {
-      try {
-        const { HtEventsBrowser } = await import('@ht-sdks/events-sdk-js-browser')
-        
-        // Hightouch write key for racquet sports tracker
-        const HT = HtEventsBrowser.load(
-          { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
-          { apiHost: 'https://us-east-1.hightouch-events.com' }
-        )
-        
-        setHtEvents(HT)
-        console.log('Hightouch SDK initialized successfully')
-      } catch (error) {
-        console.error('Failed to initialize Hightouch SDK:', error)
-      }
+    // Check if SDK is ready
+    if (htevents) {
+      htevents.ready(() => {
+        console.log('Hightouch SDK is ready')
+        setSdkReady(true)
+      })
     }
-    
-    initializeHightouch()
   }, [])
 
   const handleSubmit = async (e) => {
@@ -42,27 +41,29 @@ export default function Home() {
     const eventData = {
       game_id: gameId,
       sport_type: gameData.sportType,
-      winner: gameData.winner,
-      loser: gameData.loser,
+      winner_email: gameData.winner,
+      loser_email: gameData.loser,
       timestamp: new Date().toISOString()
     }
     
     // Send event to Hightouch
-    if (htEvents) {
+    if (htevents) {
       try {
-        htEvents.track('Match Completed', {
+        // Track the match completion event
+        htevents.track('Match Completed', {
           game_id: eventData.game_id,
           sport_type: eventData.sport_type,
-          winner_email: eventData.winner,
-          loser_email: eventData.loser,
+          winner_email: eventData.winner_email,
+          loser_email: eventData.loser_email,
           timestamp: eventData.timestamp
         })
+        
         console.log('Event sent to Hightouch:', eventData)
       } catch (error) {
         console.error('Failed to send event:', error)
       }
     } else {
-      console.log('Hightouch SDK not initialized yet:', eventData)
+      console.log('Hightouch SDK not available:', eventData)
     }
     
     // Show confirmation
@@ -146,13 +147,13 @@ export default function Home() {
             <h3 className="font-semibold text-green-800 mb-2">✅ Match Logged Successfully!</h3>
             <p className="text-sm text-gray-600">
               Game ID: {lastGame.game_id}<br />
-              {lastGame.winner} defeated {lastGame.loser} in {lastGame.sport_type.replace('_', ' ')}
+              {lastGame.winner_email} defeated {lastGame.loser_email} in {lastGame.sport_type.replace('_', ' ')}
             </p>
           </div>
         )}
         
         <div className="mt-8 text-center text-xs text-gray-500">
-          {htEvents ? '🟢 Connected to Hightouch' : '🔴 Hightouch SDK Loading...'}
+          {sdkReady ? '🟢 Connected to Hightouch' : '🔴 Hightouch SDK Loading...'}
         </div>
       </div>
     </main>
