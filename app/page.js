@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
       writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85',
     },
     {
-      // ✅ Use the correct regional endpoint
+      // ✅ Correct regional endpoint — notice "ht-engage.com" (NOT hightouch-events.com)
       apiHost: 'https://us-east-1.ht-engage.com',
     }
   )
@@ -52,7 +52,6 @@ export default function Home() {
 
     if (htevents) {
       try {
-        // Send the event to Hightouch
         const result = await htevents.track('Match Completed', eventData)
         console.log('✅ Event sent successfully to Hightouch:', eventData)
         console.log('Hightouch response:', result)
