@@ -17,7 +17,7 @@ export default function Home() {
       try {
         const { HtEventsBrowser } = await import('@ht-sdks/events-sdk-js-browser')
         
-        // TODO: Replace with your actual Hightouch write key
+        // Hightouch write key for racquet sports tracker
         const HT = HtEventsBrowser.load(
           { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
           { apiHost: 'https://us-east-1.hightouch-events.com' }
