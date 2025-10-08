@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { HtEventsBrowser } from '@ht-sdks/events-sdk-js-browser'
 
 export default function Home() {
   const [gameData, setGameData] = useState({
@@ -9,8 +10,19 @@ export default function Home() {
     loser: ''
   })
   const [lastGame, setLastGame] = useState(null)
+  const [htEvents, setHtEvents] = useState(null)
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    // Initialize Hightouch SDK
+    // TODO: Replace 'YOUR_WRITE_KEY' with your actual Hightouch write key
+    const HT = HtEventsBrowser.load(
+      { writeKey: 'YOUR_WRITE_KEY' },
+      { apiHost: 'https://us-east-1.hightouch-events.com' }
+    )
+    setHtEvents(HT)
+  }, [])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     // Generate unique game ID
@@ -24,8 +36,18 @@ export default function Home() {
       timestamp: new Date().toISOString()
     }
     
-    // For now, just log it - we'll add Hightouch SDK later
-    console.log('Game Event:', eventData)
+    // Send event to Hightouch
+    if (htEvents) {
+      htEvents.track('Match Completed', {
+        game_id: eventData.game_id,
+        sport_type: eventData.sport_type,
+        winner_email: eventData.winner,
+        loser_email: eventData.loser
+      })
+      console.log('Event sent to Hightouch:', eventData)
+    } else {
+      console.log('Hightouch SDK not initialized yet:', eventData)
+    }
     
     // Show confirmation
     setLastGame(eventData)
@@ -112,6 +134,10 @@ export default function Home() {
             </p>
           </div>
         )}
+        
+        <div className="mt-8 text-center text-xs text-gray-500">
+          {htEvents ? '🟢 Connected to Hightouch' : '🔴 Hightouch SDK Loading...'}
+        </div>
       </div>
     </main>
   )
