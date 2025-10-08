@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { HtEventsBrowser } from '@ht-sdks/events-sdk-js-browser'
 
 export default function Home() {
   const [gameData, setGameData] = useState({
@@ -13,13 +12,25 @@ export default function Home() {
   const [htEvents, setHtEvents] = useState(null)
 
   useEffect(() => {
-    // Initialize Hightouch SDK
-    // TODO: Replace 'YOUR_WRITE_KEY' with your actual Hightouch write key
-    const HT = HtEventsBrowser.load(
-      { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
-      { apiHost: 'https://us-east-1.hightouch-events.com' }
-    )
-    setHtEvents(HT)
+    // Initialize Hightouch SDK only on client-side
+    const initializeHightouch = async () => {
+      try {
+        const { HtEventsBrowser } = await import('@ht-sdks/events-sdk-js-browser')
+        
+        // TODO: Replace with your actual Hightouch write key
+        const HT = HtEventsBrowser.load(
+          { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
+          { apiHost: 'https://us-east-1.hightouch-events.com' }
+        )
+        
+        setHtEvents(HT)
+        console.log('Hightouch SDK initialized successfully')
+      } catch (error) {
+        console.error('Failed to initialize Hightouch SDK:', error)
+      }
+    }
+    
+    initializeHightouch()
   }, [])
 
   const handleSubmit = async (e) => {
@@ -38,13 +49,18 @@ export default function Home() {
     
     // Send event to Hightouch
     if (htEvents) {
-      htEvents.track('Match Completed', {
-        game_id: eventData.game_id,
-        sport_type: eventData.sport_type,
-        winner_email: eventData.winner,
-        loser_email: eventData.loser
-      })
-      console.log('Event sent to Hightouch:', eventData)
+      try {
+        htEvents.track('Match Completed', {
+          game_id: eventData.game_id,
+          sport_type: eventData.sport_type,
+          winner_email: eventData.winner,
+          loser_email: eventData.loser,
+          timestamp: eventData.timestamp
+        })
+        console.log('Event sent to Hightouch:', eventData)
+      } catch (error) {
+        console.error('Failed to send event:', error)
+      }
     } else {
       console.log('Hightouch SDK not initialized yet:', eventData)
     }
