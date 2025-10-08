@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
     },
     {
       // ✅ Correct regional endpoint — notice "ht-engage.com" (NOT hightouch-events.com)
-      apiHost: 'https://us-east-1.ht-engage.com',
+      apiHost: 'us-east-1.hightouch-events.com',
     }
   )
 }
