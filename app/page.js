@@ -3,30 +3,34 @@
 import { useState, useEffect } from 'react'
 import { HtEventsBrowser } from '@ht-sdks/events-sdk-js-browser'
 
-// Initialize Hightouch SDK outside of component
-let htevents = null;
+// Initialize Hightouch SDK outside of the component
+let htevents = null
 
 if (typeof window !== 'undefined') {
   htevents = HtEventsBrowser.load(
-    { writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85' },
-    { apiHost: 'https://us-east-1.hightouch-events.com' }
-  );
+    {
+      writeKey: 'a741bfca11a44b56515085b1cee2ec388daaeb215628da5c9b15860ce0428b85',
+    },
+    {
+      // ✅ Use the correct regional endpoint
+      apiHost: 'https://us-east-1.ht-engage.com',
+    }
+  )
 }
 
 export default function Home() {
   const [gameData, setGameData] = useState({
     sportType: 'tennis',
     winner: '',
-    loser: ''
+    loser: '',
   })
   const [lastGame, setLastGame] = useState(null)
   const [sdkReady, setSdkReady] = useState(false)
 
   useEffect(() => {
-    // Check if SDK is ready
     if (htevents) {
       htevents.ready(() => {
-        console.log('Hightouch SDK is ready')
+        console.log('🟢 Hightouch SDK is ready')
         setSdkReady(true)
       })
     }
@@ -34,46 +38,39 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    // Generate unique game ID
+
+    // Generate unique game ID locally
     const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     const eventData = {
       game_id: gameId,
       sport_type: gameData.sportType,
       winner_email: gameData.winner,
       loser_email: gameData.loser,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
-    
-    // Send event to Hightouch
+
     if (htevents) {
       try {
-        // Track the match completion event
-        htevents.track('Match Completed', {
-          game_id: eventData.game_id,
-          sport_type: eventData.sport_type,
-          winner_email: eventData.winner_email,
-          loser_email: eventData.loser_email,
-          timestamp: eventData.timestamp
-        })
-        
-        console.log('Event sent to Hightouch:', eventData)
+        // Send the event to Hightouch
+        const result = await htevents.track('Match Completed', eventData)
+        console.log('✅ Event sent successfully to Hightouch:', eventData)
+        console.log('Hightouch response:', result)
       } catch (error) {
-        console.error('Failed to send event:', error)
+        console.error('❌ Failed to send event to Hightouch:', error)
       }
     } else {
-      console.log('Hightouch SDK not available:', eventData)
+      console.warn('⚠️ Hightouch SDK not available, event not sent:', eventData)
     }
-    
-    // Show confirmation
+
+    // Update UI
     setLastGame(eventData)
-    
+
     // Reset form
     setGameData({
       sportType: 'tennis',
       winner: '',
-      loser: ''
+      loser: '',
     })
   }
 
@@ -83,18 +80,20 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-center mb-8">
           🎾 Hightouch Racquet Sports Tracker 🏓
         </h1>
-        
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4">Log Match Result</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">
                 Sport Type
               </label>
-              <select 
+              <select
                 value={gameData.sportType}
-                onChange={(e) => setGameData({...gameData, sportType: e.target.value})}
+                onChange={(e) =>
+                  setGameData({ ...gameData, sportType: e.target.value })
+                }
                 className="w-full p-2 border rounded-md"
               >
                 <option value="tennis">Tennis</option>
@@ -104,7 +103,7 @@ export default function Home() {
                 <option value="pickleball">Pickleball</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 Winner Email
@@ -113,12 +112,14 @@ export default function Home() {
                 type="email"
                 placeholder="winner@hightouch.com"
                 value={gameData.winner}
-                onChange={(e) => setGameData({...gameData, winner: e.target.value})}
+                onChange={(e) =>
+                  setGameData({ ...gameData, winner: e.target.value })
+                }
                 required
                 className="w-full p-2 border rounded-md"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 Loser Email
@@ -127,12 +128,14 @@ export default function Home() {
                 type="email"
                 placeholder="loser@hightouch.com"
                 value={gameData.loser}
-                onChange={(e) => setGameData({...gameData, loser: e.target.value})}
+                onChange={(e) =>
+                  setGameData({ ...gameData, loser: e.target.value })
+                }
                 required
                 className="w-full p-2 border rounded-md"
               />
             </div>
-            
+
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
@@ -141,17 +144,21 @@ export default function Home() {
             </button>
           </form>
         </div>
-        
+
         {lastGame && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-semibold text-green-800 mb-2">✅ Match Logged Successfully!</h3>
+            <h3 className="font-semibold text-green-800 mb-2">
+              ✅ Match Logged Successfully!
+            </h3>
             <p className="text-sm text-gray-600">
-              Game ID: {lastGame.game_id}<br />
-              {lastGame.winner_email} defeated {lastGame.loser_email} in {lastGame.sport_type.replace('_', ' ')}
+              Game ID: {lastGame.game_id}
+              <br />
+              {lastGame.winner_email} defeated {lastGame.loser_email} in{' '}
+              {lastGame.sport_type.replace('_', ' ')}
             </p>
           </div>
         )}
-        
+
         <div className="mt-8 text-center text-xs text-gray-500">
           {sdkReady ? '🟢 Connected to Hightouch' : '🔴 Hightouch SDK Loading...'}
         </div>
